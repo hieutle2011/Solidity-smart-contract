@@ -38,16 +38,21 @@ contract ZombieFeeding is ZombieFactory {
   function _isReady(Zombie storage _zombie) internal view {
     return (_zombie.readyTime <= now);
   }
-
-  function feedAndMultiply(uint _zombieId, uint _targetDna, string _species) public {
+  
+  // change function from public to internal so that it is more secure
+  function feedAndMultiply(uint _zombieId, uint _targetDna, string _species) internal {
     require(msg.sender == zombieToOwner[_zombieId]);
     Zombie storage myZombie = zombies[_zombieId];
+    // add a check for _isReady here
+    require(_isReady(myZombie));
     _targetDna = _targetDna % dnaModulus;
     uint newDna = (myZombie.dna + _targetDna) / 2;
     if (keccak256(_species) == keccak256("kitty")) {
       newDna = newDna - newDna % 100 + 99;
     }
     _createZombie("NoName", newDna);
+    // add a trigger for cooldown
+    _triggerCooldown(myZombie);
   }
 
   function feedOnKitty(uint _zombieId, uint _kittyId) public {
